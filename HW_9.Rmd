@@ -1,0 +1,181 @@
+---
+title: "HW_9"
+author: "Advait Phadke"
+date: "2025-04-16"
+output: pdf_document
+---
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, error=FALSE, setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(ggplot2)
+library(tidyverse)
+library(tibble)
+library(knitr)
+library(mosaic)
+library(MatchIt)
+library(effectsize)
+```
+
+Advait Phadke, UT EID: amp7984
+
+Github Repo:
+
+## Problem 1: Manufacturing Flaws in Circuit Boards
+
+```{r}
+
+data <- read.csv("solder.csv")
+
+```
+
+**Part A**
+
+```{r}
+ggplot(data, aes(x = Opening, y = skips)) +
+  geom_jitter(width = 0.2, height = 0, alpha = 0.6, color = "steelblue") +
+  labs(x = "Opening", y = "Skips", title = "Jitter Plot by Opening Size") +
+  theme_minimal()
+```
+
+This jitter plot shows the number of skips for each circuit board, organized by their opening size (Small, Medium, Large).
+
+```{r}
+ggplot(data, aes(x = Solder, y = skips)) +
+  geom_jitter(width = 0.2, height = 0, alpha = 0.6, color = "coral") +
+  labs(x = "Thickness of Alloy", y = "Skips", title = "Jitter Plot by Alloy Thickness", caption = "H") +
+  theme_minimal()
+```
+
+This jitter plot shows the distribution of skips across all the circuit boards, categorized by whether their allow was thin or thick.
+
+**Part B**
+
+```{r}
+
+lin_model = lm(skips ~ Opening + Solder + Opening:Solder, data = data)
+
+estimates <- coef(lin_model)
+
+conf_int <- confint(lin_model, level = 0.95)
+
+table <- data.frame(
+  Estimate = round(estimates, 3),
+  `95% CI Lower` = round(conf_int[, 1], 3),
+  `95% CI Upper` = round(conf_int[, 2], 3)
+)
+
+print (table)
+
+
+```
+
+**Part C**
+
+The intercept of 0.393 means the model predicts that when all the baseline conditions are true (opening large, solder thick) then there will be 0.393 skips.
+
+The OpeningM coefficient of 2.407 means that, according to the model, the main effect of the medium opening size is an additional 2.407 skips. This is the effect of medium opening in isolation.
+
+The OpeningS coefficient of 5.127 means that the main effect of the small opening size is an additional 5.127 skips. This is the effect of small opening in isolation.
+
+The SolderThin coefficient of 2.280 means that the main effect of the thin solder is an addition 2.280 skips. This is the effect of thin solder in isolation.
+
+The OpeningM:SolderThin coefficient of -0.740 means that when the opening is medium and the solder is thin, the skips are expected to decrease by 0.740 in comparison to just summing up the individual effects of the medium opening size and thin solder.
+
+The OpeningS:SolderThin coefficient of 9.653 means that when the opening is small and the solder is thin, the skips are expected to increase by 9.653 in comparison to just summing up the individual effects of the small opening size and thin solder.
+
+**Part D**
+
+Based on the linear regression model, I would recommend using a Large opening size along with a thick solder to minimize the amount of skips. This is the baseline used, and all of the coefficients in our model for the other thicknesses and opening sizes are positive increasing the predicted amount of skips, except for the interaction between opening medium and solder thin. But, if we were to use this configuration, the main effects combined with the interaction would still end up being positive and would be expected to increase the number of skips compared to the baseline.
+
+## Problem 2: Grocery Store Prices
+
+```{r}
+
+grocery = read.csv("groceries.csv")
+
+store_prices <- grocery %>%
+  group_by(Store) %>%
+  summarize(avg_price = mean(Price, na.rm = TRUE))
+
+head(store_prices)
+
+ggplot(store_prices, aes(x = Store, y = avg_price)) +
+  geom_col(fill = "steelblue1") +
+  coord_flip() +
+  labs(
+    title = "Average Price by Store",
+    x = "Store",
+    y = "Average Price"
+  ) +
+  theme_minimal()
+
+```
+
+```{r, fig.height = 6}
+
+product_data <- grocery %>%
+  group_by(Product) %>%
+  summarize(stores_selling = n_distinct(Store))
+
+#print (product_data)
+
+ggplot(product_data, aes(x = Product, y = stores_selling)) +
+  geom_col(fill = "red") +
+  coord_flip() +
+  labs(
+    title = "Number of Stores Selling Each Product",
+    x = "Product",
+    y = "Stores Selling"
+  ) +
+  theme_minimal()
+
+```
+
+**Part C**
+
+```{r}
+
+linear_model = lm(Price ~ Product + Type, data = grocery)
+
+confint(linear_model)
+
+```
+
+Compared with ordinary grocery stores (like Albertsons, HEB, or Krogers), convenience stores charge somewhere between \$0.41 and \$0.92 more for the same product.
+
+**Part D**
+
+```{r}
+
+model = lm(Price ~ Product + Store, data = grocery)
+coef(model)
+```
+
+Kroger Fresh Fare and Walmart seem to charge the lowest price when comparing the same product. Whole Foods and Wheatsville Food Co-Op seem to charge the highest price when comparing the same product.
+
+**Part E**
+
+The coefficient for HEB is -\$0.65 while the coefficient for Central Market is -\$0.57. Upon first look, these numbers do not seem wildly different, so it seems like Central Market charges a similar price for the same products. The difference is only \$0.08. Many of the other stores have a much larger difference, such as Natural Grocers whose coefficient is -\$0.08 making the difference \$0.57.
+
+**Part F**
+
+```{r}
+
+grocery <- grocery %>%
+  mutate(Income10K = round(Income/10000))
+
+mod = lm(Price ~ Income10K + Product, data = grocery)
+coef(mod)
+
+standardize_parameters(mod)
+
+```
+
+The sign of the coefficient on the Income10K variable is negative. Therefore, the model predicts that the higher the income the more the price decreases. This means that according to the model, people in poorer ZIP codes end up paying more for the same product on average. This coefficient just looks at the change in price between different incomes, so product is held constant during this comparison.
+
+A one-standard deviation increase in the income of a ZIP code seems to be associated with\
+a -0.04 standard-deviation change in the price that consumers in that ZIP code expect to pay for\
+the same product.
+
+## Problem 3: Redlining
