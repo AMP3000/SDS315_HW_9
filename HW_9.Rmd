@@ -47,7 +47,7 @@ ggplot(data, aes(x = Solder, y = skips)) +
   theme_minimal()
 ```
 
-This jitter plot shows the distribution of skips across all the circuit boards, categorized by whether their solder was thin or thick.
+This jitter plot shows the distribution of skips across all the circuit boards, categorized by whether their alloy was thin or thick.
 
 **Part B**
 
