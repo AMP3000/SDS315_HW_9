@@ -19,7 +19,7 @@ library(effectsize)
 
 Advait Phadke, UT EID: amp7984
 
-Github Repo: <https://github.com/AMP3000/SDS315_HW_9/upload>
+Github Repo: <https://github.com/AMP3000/SDS315_HW_9>
 
 ## Problem 1: Manufacturing Flaws in Circuit Boards
 
