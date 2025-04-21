@@ -47,26 +47,30 @@ ggplot(data, aes(x = Solder, y = skips)) +
   theme_minimal()
 ```
 
-This jitter plot shows the distribution of skips across all the circuit boards, categorized by whether their allow was thin or thick.
+This jitter plot shows the distribution of skips across all the circuit boards, categorized by whether their solder was thin or thick.
 
 **Part B**
 
 ```{r}
 
-lin_model = lm(skips ~ Opening + Solder + Opening:Solder, data = data)
+
+
+lin_model <- lm(skips ~ Opening + Solder + Opening:Solder, data = data)
 
 estimates <- coef(lin_model)
-
 conf_int <- confint(lin_model, level = 0.95)
 
 table <- data.frame(
+  Term = names(estimates),
   Estimate = round(estimates, 3),
   `95% CI Lower` = round(conf_int[, 1], 3),
   `95% CI Upper` = round(conf_int[, 2], 3)
 )
 
-print (table)
-
+knitr::kable(
+  table,
+  caption = "Regression Coefficients Estimate with Respective 95% Confidence Intervals"
+)
 
 ```
 
@@ -98,7 +102,7 @@ store_prices <- grocery %>%
   group_by(Store) %>%
   summarize(avg_price = mean(Price, na.rm = TRUE))
 
-head(store_prices)
+#head(store_prices)
 
 ggplot(store_prices, aes(x = Store, y = avg_price)) +
   geom_col(fill = "steelblue1") +
@@ -111,6 +115,8 @@ ggplot(store_prices, aes(x = Store, y = avg_price)) +
   theme_minimal()
 
 ```
+
+The bar graph above shows the average price of products for each store in the dataset.
 
 ```{r, fig.height = 6}
 
@@ -132,13 +138,15 @@ ggplot(product_data, aes(x = Product, y = stores_selling)) +
 
 ```
 
+The bar graph above shows the number of stores that are selling each product in the dataset
+
 **Part C**
 
 ```{r}
 
 linear_model = lm(Price ~ Product + Type, data = grocery)
 
-confint(linear_model)
+#confint(linear_model)
 
 ```
 
@@ -149,40 +157,40 @@ Compared with ordinary grocery stores (like Albertsons, HEB, or Krogers), conven
 ```{r}
 
 model = lm(Price ~ Product + Store, data = grocery)
-coef(model)
+#coef(model)
 ```
 
 Kroger Fresh Fare and Walmart seem to charge the lowest price when comparing the same product. Whole Foods and Wheatsville Food Co-Op seem to charge the highest price when comparing the same product.
 
 **Part E**
 
-The coefficient for HEB is -\$0.65 while the coefficient for Central Market is -\$0.57. Upon first look, these numbers do not seem wildly different, so it seems like Central Market charges a similar price for the same products. The difference is only \$0.08. Many of the other stores have a much larger difference, such as Natural Grocers whose coefficient is -\$0.08 making the difference \$0.57.
+The coefficient for HEB is -\$0.65 while the coefficient for Central Market is -\$0.57. Upon first look, these numbers do not seem wildly different, so it seems like Central Market charges a similar price for the same products. The difference is only \$0.08. Many of the other stores have a much larger difference, such as Natural Grocers whose coefficient is -\$0.08 making the difference \$0.57 in comparison to HEB.
 
 **Part F**
 
 ```{r}
 
 grocery <- grocery %>%
-  mutate(Income10K = round(Income/10000))
+  mutate(Income10K = trunc(Income/10000))
 
-mod = lm(Price ~ Income10K + Product, data = grocery)
-coef(mod)
+mod = lm(Price ~ Product + Income10K, data = grocery)
+#coef(mod)
 
-standardize_parameters(mod)
+#standardize_parameters(mod)
 
 ```
 
 The sign of the coefficient on the Income10K variable is negative. Therefore, the model predicts that the higher the income the more the price decreases. This means that according to the model, people in poorer ZIP codes end up paying more for the same product on average. This coefficient just looks at the change in price between different incomes, so product is held constant during this comparison.
 
 A one-standard deviation increase in the income of a ZIP code seems to be associated with\
-a -0.04 standard-deviation change in the price that consumers in that ZIP code expect to pay for\
+a -0.03 standard-deviation change in the price that consumers in that ZIP code expect to pay for\
 the same product.
 
 ## Problem 3: Redlining
 
 A. ZIP codes with a higher percentage of minority residents tend to have more FAIR policies per 100 housing units.
 
-True. As we can see in the scatterplot of % minority residents vs FAIR policies per 100 housing units, there is a moderately strong positive linear relationship between the two variables. The slope of the linear regression line is 0.014, meaning that it predicts that for every 1% increase in minority residents in the total ZIP code's population, the FAIR policies per 100 housing units goes up by 0.014. The r squared of the model is 0.51639, meaning that the model is able to explain 51.64% of the variability we see in y. This is extremely high, but is pretty high, indicating that the model does a decent job of predicting FAIR policies per 100 housing units based on minority residents %. This means that there does appear to be a positive linear relationship between the two variables, validating the given statement.
+True. As we can see in the scatterplot of % minority residents vs FAIR policies per 100 housing units, there is a moderately strong positive linear relationship between the two variables. The slope of the linear regression line is 0.014, meaning that it predicts that for every 1% increase in minority residents in the total ZIP code's population, the FAIR policies per 100 housing units goes up by 0.014. The r squared of the model is 0.51639, meaning that the model is able to explain 51.64% of the variability we see in y. This is extremely high, but is pretty high, indicating that the model does a decent job of predicting FAIR policies per 100 housing units based on minority residents %. Another important addition is that the confidence interval for the coefficient on minority is (0.009, 0.18). This confidence interval does not include 0, which means that it is not a plausible value in the light of this data. This means that there does appear to be a positive linear relationship between the two variables, validating the given statement.
 
 B. The evidence suggests an interaction effect between minority percentage and the age of the housing stock in the way that these two variables are related to the number of FAIR policies in a ZIP code.\
 
@@ -191,14 +199,14 @@ Undecidable/ambiguous. In order to determine whether there is an interaction, we
 C. The relationship between minority percentage and number of FAIR policies per 100 housing units is\
 stronger in high-fire-risk ZIP codes than in low-fire-risk ZIP codes.\
 
-Undecidable/ambiguous. In order to determine whether this is actually true, we would have to split the dataset into two, and separately fit linear regression models on the low and high fire risk data and compare the R squared. If one is much higher than the other, then the statement would be true. We do see a linear regression model with an interaction term leading to two different lines on the scatteplot, one for high risk and one for low risk. But, the best we can do from this is see if the points in either group have a stronger linear relationship visually. But, in this case, we can't observe much just from doing that.
+Undecidable/ambiguous. In order to determine whether this is actually true, we would have to split the dataset into two, and separately fit linear regression models on the low and high fire risk data and compare the R squared. If one is much higher than the other, then the statement would be true. We do see a linear regression model with an interaction term leading to two different lines on the scatterplot, one for high risk and one for low risk. But, the best we can do from this is see if the points in either group have a stronger linear relationship visually. But, in this case, we can't observe much just from doing that. The confidence interval for the interaction coefficient is (-0.012, 0.01), which includes 0, meaning that the interaction between the two variables is not statistically significant. This doesn't directly tell us about low/high fire risk ZIP codes having a stronger or weaker relationship with minority percentage, but it does add a little bit to our analysis in terms of how there doesn't seem to be an interaction between the two variables.
 
 D. Even without controlling for any other variables, income “explains away” all the association between\
 minority percentage and FAIR policy uptake.\
 
-False. Explaining away means that when you add a variable to your linear regression model, the slope of the other variable (minority in this case) comes much closer to 0, indicating that the effect was actually due to the new variable. The coefficient on the minority variable changes from 0.014 to 0.01 after adding Income to the linear regression model, so it definitely does not explain away all the association between minority percentage and FAIR policy uptake. So, it would be more appropriate to say that even without controlling for any other variables, income explains away a portion of the association between minority percentage and FAIR policy uptake.
+False. Explaining away means that when you add a variable to your linear regression model, the slope of the other variable (minority in this case) comes much closer to 0, indicating that the effect was actually due to the new variable. The coefficient on the minority variable changes from 0.014 to 0.01 after adding Income to the linear regression model, so it definitely does not explain away all the association between minority percentage and FAIR policy uptake. The 95% confidence interval for the minority coefficient is (0.004, 0.015), which does not include 0, meaning that there is a positive relationship between minority percentage and FAIR policy uptake. So, it would be more appropriate to say that even without controlling for any other variables, income explains away a portion of the association between minority percentage and FAIR policy uptake.
 
 E. Minority percentage and number of FAIR policies are still associated at the ZIP code level, even after\
 controlling for income, fire risk, and housing age.
 
-True. When doing linear regression with just minority percentage predicting FAIR policy uptake, the slope was 0.014. After adding all the variables as predictors (fire risk, income, etc.), the coefficient on the minority percentage variable became 0.008. So, we can say that around 40% of the association was explained away by the other variables. But, 0.008 is still significant. The percentage of minority residents can range from 0-100, so this means that the FAIR policy uptake can be between 0 and 0.8% different based on the minority percentage, which is actually a big difference as the FAIR policy uptake in all the ZIP codes in the dataset ranges from around 0% to a little over 2%. To solidify this argument, it would be helpful to see standardized coefficients (although we did a similar rudimentary makeshift analysis) or the effect size of each variable.
+True. When doing linear regression with just minority percentage predicting FAIR policy uptake, the slope was 0.014. After adding all the variables as predictors (fire risk, income, etc.), the coefficient on the minority percentage variable became 0.008. So, we can say that around 40% of the association was explained away by the other variables. But, 0.008 is still significant. The 95% confidence interval for this coefficient (0.003, 0.014), which does not include 0, meaning that it is not a plausible value. So, there is a relationship between minority percentage and FAIR policy uptake. In addition to this, the percentage of minority residents can range from 0-100, so this means that the FAIR policy uptake can be between 0 and 0.8% different based on the minority percentage, which is actually a big difference as the FAIR policy uptake in all the ZIP codes in the dataset ranges from around 0% to a little over 2%. To solidify this argument, it would be helpful to see standardized coefficients (although we did a similar rudimentary makeshift analysis) or the effect size of each variable.
